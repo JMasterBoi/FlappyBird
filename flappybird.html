@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <title>Flappy Bird</title>
+    </head>
+    <body>
+        <script type="text/javascript">
+            class GameObject
+            {
+                constructor(x, y, width, height, fallSpeed, tag)
+                {
+                    this.x = x;
+                    this.y = y;
+                    this.width = width;
+                    this.height = height;
+                    this.width = width;
+                    this.fallSpeed = fallSpeed;
+                    this.tag = tag;
+
+                    this.canFall = true;
+                    this.CenterX = (this.width/2) + this.x;
+                    this.CenterY = (this.height/2) + this.y;
+                    this.yAcc = 0;
+                    this.gaveScore = false;
+                }
+
+                render(newColor)
+                {
+                    // DRAWING
+                    c.fillStyle = newColor;
+                    c.fillRect(this.x, this.y, this.width, this.height);
+
+                    // GRAVITY
+                    this.y += this.yAcc;
+                    if (this.canFall && !lost)
+                    {
+                        this.yAcc += this.fallSpeed;
+                    }
+
+                    if (lost)
+                    {
+                        this.yAcc = 0;
+                    }
+
+                    // TOUCHING FLOOR / ROOF
+                    if (this.y >= FLOOR_HEIGHT - this.height)
+                    {
+                        this.canFall = false;
+                        this.yAcc = 0;
+                    }
+                    else
+                    {
+                        this.canFall = true;
+                    }
+
+                    while ((this.y <= 0 + (this.height/2)) && this.tag != "Pipe")
+                    {
+                        this.addY(3);
+                    }
+
+                    if (this.tag == "Pipe" && !lost)
+                    {
+                        this.x -= pipeMoveSpd;
+                    }
+                }
+
+                setCoords(xLev, yLev)
+                {
+                    this.x = xLev;
+                    this.y = yLev;
+                }
+
+                addX(newX)
+                {
+                    this.x += newX;
+                }
+
+                addY(newY)
+                {
+                    this.y += newY;
+                }
+
+                addForceUp(force)
+                {
+                    
+                }
+
+                touching(subject)
+                {
+                    if (this.x < subject.x + subject.width && this.x + this.width > subject.x && this.y < subject.y + subject.height && this.y + this.height > subject.y)
+                    {
+                        return true;
+                    } else
+                    {
+                        return false;
+                    }
+                }
+
+                touchX(xLevel)
+                {
+                    if (xLevel >= this.x)
+                    {
+                        return true;
+                    }
+                    else
+                    {
+                        return false;
+                    }
+                }
+
+                touchY(yLevel)
+                {
+                    if (yLevel <= this.y)
+                    {
+                        return true;
+                    }
+                    else
+                    {
+                        return false;
+                    }
+                }
+            }
+
+            //#region CONSTANTS
+            const CANVAS_WIDTH = 1386;
+            const CANVAS_HEIGHT = 773;
+            const FLOOR_HEIGHT = CANVAS_HEIGHT;
+            const JUMP_SPEED = -17;
+            const SPAWN_RATE = 50;
+            //#endregion
+
+            //#region  SETUP
+            var canvas = document.createElement('canvas');
+            var c = canvas.getContext('2d');
+            canvas.width = CANVAS_WIDTH;
+            canvas.height = CANVAS_HEIGHT;
+            
+            document.body.appendChild(canvas);
+
+            // VARIABLES
+            var Flappy = new GameObject(50, 100, 50, 50, 1, "Flappy");
+            var lowPipes = [new GameObject(CANVAS_WIDTH - 1, 400, 100, 1000, 0, "Pipe")];
+            var highPipes = [new GameObject(CANVAS_WIDTH - 1, 0, 100, 200, 0, "Pipe")];
+            var lost = false;
+            var pipeMoveSpd = 8;
+            var score = 0;
+            
+            window.addEventListener("keydown", onKeyDown);
+            window.addEventListener('load', start);
+            
+            function start()
+            {
+                window.requestAnimationFrame(mainLoop);
+            }
+            //#endregion
+            
+            //#region  MAIN LOOP
+            function mainLoop()
+            {
+                update();
+                draw();
+                window.requestAnimationFrame(mainLoop);
+            }
+            //#endregion
+
+            //#region PLAYER INPUT
+            function onKeyDown(e)
+            {
+                // console.log(e.keyCode);
+                if (event.keyCode === 32)
+                {
+                    if (lost)
+                    {
+                        window.location.reload();
+                    }
+                    else
+                    {
+                        Flappy.yAcc = JUMP_SPEED;
+                    }
+                }
+                
+            }
+            //#endregion
+            
+            //#region  UPDATING
+            var frameCount = 0;
+            function update()
+            {
+                // INCREASE SCORE
+                lowPipes.forEach(pipe =>
+                {
+                    if (inBetween(Flappy.x, pipe.x, pipe.x + pipe.width) && !pipe.gaveScore)
+                    {
+                        pipe.gaveScore = true;
+                        score++;
+                    }
+                });
+                
+                // SPAWN
+                var entraceHeight = random(200, 700);
+                frameCount++;
+                if (frameCount % SPAWN_RATE == 0 && ! lost)
+                {
+                    lowPipes.push(new GameObject(CANVAS_WIDTH - 1, entraceHeight + 100, 100, 1000, 0, "Pipe"));
+                    highPipes.push(new GameObject(CANVAS_WIDTH - 1, 0, 100, entraceHeight - 100, 0, "Pipe"));
+                }
+
+                lowPipes.forEach(function(pipe, index)/* => */{                  
+                    if (pipe.x + pipe.width <= 0)
+                    {
+                        lowPipes.splice(index, 1)
+                    }
+
+                    if (Flappy.touching(pipe))
+                    {
+                        if (!lost)
+                        {
+                            lost = true; 
+                        }
+                    }
+                });
+
+                highPipes.forEach(function(pipes, index)/* => */{                  
+                    if (pipes.x + pipes.width <= 0)
+                    {
+                        highPipes.splice(index, 1)
+                    }
+
+                    if (Flappy.touching(pipes))
+                    {
+                        if (!lost)
+                        {
+                            lost = true; 
+                        }
+                    }
+                });
+            }
+            //#endregion
+            
+            //#region DRAWING
+            function draw()
+            {
+                // BACKGROUND
+                c.fillStyle = "lightskyblue";
+                c.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+                c.fillStyle = "yellow";
+                c. fillRect(CANVAS_WIDTH - 300, 100, 200, 200)
+
+                // FOREGROUND
+                lowPipes.forEach(pipe =>
+                {
+                    pipe.render("Green");
+                });
+                highPipes.forEach(pipe =>
+                {
+                    pipe.render("Green");
+                });
+                
+                Flappy.render("gold");
+
+                c.fillStyle = "grey";
+                c.font = "80px Arial";
+                c.fillText("Score: " + score, 600, 100);
+
+                if (lost)
+                {
+                    c.fillStyle = "orange";
+                    c.font = "80px Arial";
+                    c.fillText("PRESS SPACE TO TRY AGAIN!", CANVAS_WIDTH/2 - 550, CANVAS_HEIGHT/2 + 90);
+
+                    c.fillStyle = "black";
+                    c.font = "80px Arial";
+                    c.fillText("YOU LOSE", CANVAS_WIDTH/2 - 130, CANVAS_HEIGHT/2 - 60);
+                }
+            }
+            //#endregion
+        
+            //#region ETC FUNCTS
+            function inBetween(between, min, max)
+            {
+                if (between >= min && between <= max)
+                {
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
+            }
+
+            function random(min, max)
+            {
+                return Math.floor(Math.random()*(max-min+1)+min);
+            }
+            //#endregion
+        </script>
+    </body>
+</html>
