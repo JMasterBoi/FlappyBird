@@ -126,7 +126,7 @@
             const CANVAS_WIDTH = 1386;
             const CANVAS_HEIGHT = 773;
             const FLOOR_HEIGHT = CANVAS_HEIGHT;
-            const JUMP_SPEED = -17;
+            const JUMP_SPEED = -15;
             const SPAWN_RATE = 50;
             //#endregion
 
@@ -145,6 +145,7 @@
             var lost = false;
             var pipeMoveSpd = 8;
             var score = 0;
+            var flap = new Audio("sfx_wing.mp3");
             
             window.addEventListener("keydown", onKeyDown);
             window.addEventListener('load', start);
@@ -177,6 +178,7 @@
                     else
                     {
                         Flappy.yAcc = JUMP_SPEED;
+                        flap.play();
                     }
                 }
                 
