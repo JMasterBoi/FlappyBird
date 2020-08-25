@@ -2,6 +2,7 @@
     <html lang="en">
     <head>
         <meta charset="UTF-8">
+        <link rel="shortcut icon" type="image/x-icon" href="favicon.ico">
         <title>Flappy Bird</title>
     </head>
     <body>
@@ -146,6 +147,8 @@
             var pipeMoveSpd = 8;
             var score = 0;
             var flap = new Audio("sfx_wing.mp3");
+
+            flap.volume = .2;
             
             window.addEventListener("keydown", onKeyDown);
             window.addEventListener('load', start);
